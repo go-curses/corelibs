@@ -23,10 +23,19 @@ import (
 )
 
 func Run(path, name string, argv ...string) (stdout, stderr string, status int, err error) {
-	cmd := exec.Command(name, argv...)
+	return With(Options{
+		Path:    path,
+		Name:    name,
+		Argv:    argv,
+		Environ: os.Environ(),
+	})
+}
+
+func With(options Options) (stdout, stderr string, status int, err error) {
+	cmd := exec.Command(options.Name, options.Argv...)
 	cmd.Stdin = nil
-	cmd.Dir = path
-	cmd.Env = os.Environ()
+	cmd.Dir = options.Path
+	cmd.Env = options.Environ
 
 	var ob, eb bytes.Buffer
 	cmd.Stdout = &ob
