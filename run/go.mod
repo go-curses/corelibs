@@ -2,7 +2,7 @@ module github.com/go-curses/corelibs/run
 
 go 1.21.0
 
-require github.com/go-curses/cdk v0.5.17
+require github.com/go-curses/cdk v0.5.18
 
 require (
 	github.com/GehirnInc/crypt v0.0.0-20200316065508-bb7000b8a962 // indirect
@@ -12,7 +12,7 @@ require (
 	github.com/felixge/fgprof v0.9.3 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/go-curses/term v1.2.2-gocurses.1 // indirect
-	github.com/go-curses/terminfo v1.0.0 // indirect
+	github.com/go-curses/terminfo v1.1.0 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/google/pprof v0.0.0-20211214055906-6f57359322fd // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
