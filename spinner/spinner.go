@@ -15,19 +15,15 @@
 package spinner
 
 import (
+	"sync"
 	"time"
 
-	"github.com/go-curses/cdk/lib/sync"
+	"github.com/go-curses/cdk/lib/paint"
 )
 
 var (
-	SafeSymbols = []string{
-		"/", "|", "\\", "-", "/", "|", "\\", "-",
-	}
-	BrailleSymbols = []string{
-		"⣷", "⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯",
-	}
-	DefaultSymbols = BrailleSymbols
+	DefaultSpinnerRunes, _ = paint.GetSpinners(paint.SevenDotSpinner)
+	DefaultSymbols         = DefaultSpinnerRunes.Strings()
 )
 
 type Callback func(symbol string)
