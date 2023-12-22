@@ -1,5 +1,5 @@
-github.com/go-curses/cdk v0.5.18 h1:ywxSobVP7icYwqA6/nmW78EG9gwaWg9Y4FKCs9ySmMs=
-github.com/go-curses/cdk v0.5.18/go.mod h1:ovyuTtbPz5eNklvMe18cqleOp60PdsYOhRo3Jzx4p+c=
+github.com/go-curses/cdk v0.5.19 h1:q8e1xFb6U5Bf/SHhhYrf2dRbgLvFhNXxybw+YkAOa6Y=
+github.com/go-curses/cdk v0.5.19/go.mod h1:RI4gwSbd6FvDiKHtJywSdRAm2z8X4ifIinUoKBoQkBc=
 github.com/gopherjs/gopherjs v1.17.2 h1:fQnZVsXk8uxXIStYb0N4bGk7jeyTalG/wsZjQ25dO0g=
 github.com/gopherjs/gopherjs v1.17.2/go.mod h1:pRRIvn/QzFLrKfvEz3qUuEhtE/zLCWfreZ6J5gM2i+k=
 github.com/jtolds/gls v4.20.0+incompatible h1:xdiiI2gbIgH/gLH7ADydsJ1uDOEzR8yvV7C0MuV77Wo=
