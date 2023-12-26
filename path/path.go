@@ -16,15 +16,21 @@ package path
 
 import (
 	"fmt"
-	"io"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
+	"github.com/gabriel-vasile/mimetype"
 	"github.com/hexops/gotextdiff"
 	"github.com/hexops/gotextdiff/myers"
 	"github.com/hexops/gotextdiff/span"
+
+	"github.com/go-curses/corelibs/strings"
+)
+
+var (
+	DefaultDirMode  os.FileMode = 0770
+	DefaultFileMode os.FileMode = 0660
 )
 
 func Permissions(path string) (perms fs.FileMode, err error) {
@@ -35,62 +41,20 @@ func Permissions(path string) (perms fs.FileMode, err error) {
 	return
 }
 
-func Exists(path string) bool {
-	_, err := os.Stat(path)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return err == nil
-}
-
-func ReadFile(path string) (contents string, err error) {
-	var raw []byte
-	if raw, err = ioutil.ReadFile(path); err == nil {
-		contents = string(raw)
-	}
-	return
-}
-
-func WriteFile(path, contents string, perms fs.FileMode) (err error) {
-	err = ioutil.WriteFile(path, []byte(contents), perms)
-	return
-}
-
-func IsDir(path string) bool {
-	info, err := os.Stat(path)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return err == nil && info.IsDir()
-}
-
 func IsHidden(path string) bool {
 	name := filepath.Base(path)
 	return len(name) > 0 && name[0] == '.'
 }
 
-func Ls(path string, all bool, recursive bool) (paths []string) {
-	if !IsDir(path) {
-		paths = append(paths, path)
-		return
-	}
-	if recursive {
-		_ = filepath.Walk(path, func(p string, info os.FileInfo, e error) error {
-			if e == nil && !info.IsDir() {
-				if all || !IsHidden(info.Name()) {
-					paths = append(paths, p)
-				}
+func IsPlainText(src string) (isPlain bool) {
+	if IsFile(src) {
+		if kind, err := mimetype.DetectFile(src); err == nil {
+			if isPlain = kind.Is("text/plain"); isPlain {
+				return
 			}
-			return nil
-		})
-		return
-	}
-	if entries, err := os.ReadDir(path); err == nil {
-		for _, entry := range entries {
-			if !entry.IsDir() {
-				name := entry.Name()
-				if all || !IsHidden(name) {
-					paths = append(paths, path+string(os.PathSeparator)+name)
+			for parent := kind.Parent(); parent != nil; parent = parent.Parent() {
+				if isPlain = parent.Is("text/plain"); isPlain {
+					return
 				}
 			}
 		}
@@ -99,12 +63,18 @@ func Ls(path string, all bool, recursive bool) (paths []string) {
 }
 
 func Overwrite(path, content string) (err error) {
-	err = OverwriteWithPerms(path, content, 0644)
+	var perms os.FileMode
+	if perm, ee := Permissions(path); ee != nil {
+		perm = DefaultFileMode
+	} else {
+		perms = perm
+	}
+	err = OverwriteWithPerms(path, content, perms)
 	return
 }
 
 func OverwriteWithPerms(path, content string, perm fs.FileMode) (err error) {
-	err = ioutil.WriteFile(path, []byte(content), perm)
+	err = os.WriteFile(path, []byte(content), perm)
 	return
 }
 
@@ -113,7 +83,12 @@ func BackupAndOverwrite(path, backup, content string) (err error) {
 	if perms, err = Permissions(path); err != nil {
 		return
 	}
-	if err = CopyFile(path, backup); err != nil {
+
+	for Exists(backup) {
+		backup = strings.IncrementFilePath(backup)
+	}
+
+	if _, err = CopyFile(path, backup); err != nil {
 		return
 	}
 	err = OverwriteWithPerms(path, content, perms)
@@ -123,61 +98,36 @@ func BackupAndOverwrite(path, backup, content string) (err error) {
 // Diff returns a unified diff comparing two files
 func Diff(src, dst string) (unified string, err error) {
 	var edits []gotextdiff.TextEdit
-	var source string
 	if !Exists(src) || IsDir(src) {
 		err = fmt.Errorf(`"%v" not found or not a file`, src)
 		return
-	}
-	if !Exists(dst) || IsDir(dst) {
+	} else if !Exists(dst) || IsDir(dst) {
 		err = fmt.Errorf(`"%v" not found or not a file`, dst)
 		return
 	}
-	var modified string
+	var source, modified []byte
 	if source, err = ReadFile(src); err != nil {
 		return
-	}
-	if modified, err = ReadFile(dst); err != nil {
+	} else if modified, err = ReadFile(dst); err != nil {
 		return
 	}
-	edits = myers.ComputeEdits(span.URIFromPath(src), source, modified)
-	unified = fmt.Sprint(gotextdiff.ToUnified(src, dst, source, edits))
+	edits = myers.ComputeEdits(span.URIFromPath(src), string(source), string(modified))
+	unified = fmt.Sprint(gotextdiff.ToUnified(src, dst, string(source), edits))
 	return
-}
-
-func CopyFile(src, dst string) (err error) {
-	if !Exists(src) || IsDir(src) {
-		return fmt.Errorf(`"%v" not found or not a file`, src)
-	}
-	var srcFile, dstFile *os.File
-	if srcFile, err = os.Open(src); err != nil {
-		return fmt.Errorf("error opening file: %s", err)
-	}
-	if dstFile, err = os.Create(dst); err != nil {
-		srcFile.Close()
-		return fmt.Errorf("error creating file: %s", err)
-	}
-	defer dstFile.Close()
-	defer srcFile.Close()
-	if _, e := io.Copy(dstFile, srcFile); e != nil {
-		return fmt.Errorf("error copying file: %s", e)
-	}
-	return nil
 }
 
 func MoveFile(src, dst string) (err error) {
 	if !Exists(src) || IsDir(src) {
-		return fmt.Errorf(`"%v" not found or not a file`, src)
-	}
-	if err = os.Rename(src, dst); err == nil {
-		// rename worked, no need to copy
+		err = fmt.Errorf(`file not found or is not a regular file`)
+		return
+	} else if err = os.Rename(src, dst); err == nil {
+		// rename worked, no need to copy+remove
+		return
+	} else if _, err = CopyFile(src, dst); err != nil {
+		return
+	} else if err = os.Remove(src); err != nil {
+		err = fmt.Errorf("error removing old file: %w", err)
 		return
 	}
-	if err = CopyFile(src, dst); err != nil {
-		return
-	}
-	err = os.Remove(src)
-	if err != nil {
-		return fmt.Errorf("error removing file: %s", err)
-	}
-	return nil
+	return
 }
