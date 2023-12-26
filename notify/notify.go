@@ -16,6 +16,7 @@ package notify
 
 import (
 	"fmt"
+	"io"
 	"os"
 )
 
@@ -28,17 +29,23 @@ const (
 )
 
 type Notifier struct {
-	level Level
+	level  Level
+	stdout io.Writer
+	stderr io.Writer
 }
 
 func New(level Level) *Notifier {
 	return &Notifier{
-		level: level,
+		level:  level,
+		stdout: os.Stdout,
+		stderr: os.Stderr,
 	}
 }
 
-func (n *Notifier) Set(level Level) {
+func (n *Notifier) Set(level Level, stdout io.Writer, stderr io.Writer) {
 	n.level = level
+	n.stdout = stdout
+	n.stderr = stderr
 }
 
 func (n *Notifier) Level() (level Level) {
@@ -51,7 +58,7 @@ func (n *Notifier) Debug(format string, argv ...interface{}) {
 			argv = append(argv, format)
 			format = "%s"
 		}
-		fmt.Printf(format, argv...)
+		_, _ = fmt.Fprintf(n.stdout, format, argv...)
 	}
 }
 
@@ -61,7 +68,7 @@ func (n *Notifier) Info(format string, argv ...interface{}) {
 			argv = append(argv, format)
 			format = "%s"
 		}
-		fmt.Printf(format, argv...)
+		_, _ = fmt.Fprintf(n.stdout, format, argv...)
 	}
 }
 
@@ -71,6 +78,6 @@ func (n *Notifier) Error(format string, argv ...interface{}) {
 			argv = append(argv, format)
 			format = "%s"
 		}
-		fmt.Fprintf(os.Stderr, format, argv...)
+		_, _ = fmt.Fprintf(n.stderr, format, argv...)
 	}
 }
