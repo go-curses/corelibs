@@ -1,0 +1,12 @@
+github.com/go-curses/corelibs/convert v0.0.0-20231226200331-c1808bac46ba h1:dKZPi4lhmoh9jefUcjcqEsZQ01th9Ke/39RWpRFt2jE=
+github.com/go-curses/corelibs/convert v0.0.0-20231226200331-c1808bac46ba/go.mod h1:Ga8u3mQLb7FTq/A/TT6lwiWFjNE/TJ8jFM43bfrF90w=
+github.com/go-curses/corelibs/maths v0.0.0-20231226195412-d09833818d92 h1:R2/NSZ8s4q8x9Brnv0OBvoFOLEOcPss+WYuwdK2zjnE=
+github.com/go-curses/corelibs/maths v0.0.0-20231226195412-d09833818d92/go.mod h1:aQIWisSp8edBon8GqUUr197h/gntdsvyNGtyeTcg5U8=
+github.com/go-curses/corelibs/regexps v0.0.0-20231226200331-c1808bac46ba h1:rmwgv3XLyqVG4VOTqFcgO8AYTTR02uRB0w0zB6qxcaQ=
+github.com/go-curses/corelibs/regexps v0.0.0-20231226200331-c1808bac46ba/go.mod h1:4SS5/a+qy24O19u+62B1ktutBr0eTLDbmmNsrdn32aQ=
+github.com/go-curses/corelibs/slices v0.0.0-20231226200331-c1808bac46ba h1:Jy5+VvKn/zHDaGgNbqleWLnToYZMxeqQgLu4UWVf1dQ=
+github.com/go-curses/corelibs/slices v0.0.0-20231226200331-c1808bac46ba/go.mod h1:Xlve+fyoAY9OriDYCvtulsYurGpa1BBDww+0arx4fcM=
+github.com/iancoleman/strcase v0.3.0 h1:nTXanmYxhfFAMjZL34Ov6gkzEsSJZ5DbhxWjvSASxEI=
+github.com/iancoleman/strcase v0.3.0/go.mod h1:iwCmte+B7n89clKwxIoIXy/HfoL7AsD47ZCWhYzw7ho=
+github.com/maruel/natural v1.1.1 h1:Hja7XhhmvEFhcByqDoHz9QZbkWey+COd9xWfCfn1ioo=
+github.com/maruel/natural v1.1.1/go.mod h1:v+Rfd79xlw1AgVBjbO0BEQmptqb5HvL/k9GRHB7ZKEg=
