@@ -97,8 +97,8 @@ var (
 	RxPathSuffix = regexp.MustCompile(`-(\d+)\s*$`)
 )
 
-// IncrementFileName will return the given label with a specific number suffix incremented. If the label does not end with
-// the pattern `\(\d+\)\s*$`, one is appended with a space, if the pattern matches no spaces are added and the
+// IncrementFileName will return the given label with a specific number suffix incremented. If the label does not end
+// with the pattern `\(\d+\)\s*$`, one is appended with a space, if the pattern matches no spaces are added and the
 // digit is modified and any trailing space removed
 func IncrementFileName(name string) (modified string) {
 	if RxNameSuffix.MatchString(name) {
@@ -120,5 +120,24 @@ func IncrementFilePath(name string) (modified string) {
 	} else {
 		modified = name + "-1"
 	}
+	return
+}
+
+// IncrementFileBackup is similar to IncrementFileName and IncrementFilePath except that a ".bak" extension is appended
+// with a leading `\.\d+` increment pattern.
+//
+// Examples:
+//
+//	IncrementFileBackup("test.txt") == "test.txt.bak"
+//	IncrementFileBackup("test.txt.bak") == "test.txt.1.bak"
+//	IncrementFileBackup("test.txt.1.bak") == "test.txt.2.bak"
+func IncrementFileBackup(name string) (modified string) {
+	var trimmed string
+	if strings.HasSuffix(name, ".bak") {
+		trimmed = name[:len(name)-4]
+	} else {
+		trimmed = name
+	}
+	modified = IncrementFilePath(trimmed) + ".bak"
 	return
 }
