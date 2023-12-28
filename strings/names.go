@@ -94,7 +94,7 @@ func NameFromEmail(email string) (name string) {
 
 var (
 	RxNameSuffix = regexp.MustCompile(`\((\d+)\)\s*$`)
-	RxPathSuffix = regexp.MustCompile(`-(\d+)\s*$`)
+	RxPathSuffix = regexp.MustCompile(`.(\d+)\s*$`)
 )
 
 // IncrementFileName will return the given label with a specific number suffix incremented. If the label does not end
@@ -111,20 +111,20 @@ func IncrementFileName(name string) (modified string) {
 	return
 }
 
-// IncrementFilePath is the same as IncrementFileName except using a `-\d+` suffix pattern instead of ` \(\d+\)`
+// IncrementFilePath is the same as IncrementFileName except using a `\.\d+` suffix pattern instead of ` \(\d+\)`
 func IncrementFilePath(name string) (modified string) {
 	if RxPathSuffix.MatchString(name) {
 		m := RxPathSuffix.FindAllStringSubmatch(name, 1)
 		d, _ := strconv.Atoi(m[0][1])
-		modified = RxPathSuffix.ReplaceAllString(name, fmt.Sprintf("-%d", d+1))
+		modified = RxPathSuffix.ReplaceAllString(name, fmt.Sprintf(".%d", d+1))
 	} else {
-		modified = name + "-1"
+		modified = name + ".1"
 	}
 	return
 }
 
-// IncrementFileBackup is similar to IncrementFileName and IncrementFilePath except that a ".bak" extension is appended
-// with a leading `\.\d+` increment pattern.
+// IncrementFileBackup removes any ".bak" extension present, uses IncrementFilePath to do the incrementing and adding
+// a ".bak" extension regardless of the presence of any ".bak" extension before incrementing.
 //
 // Examples:
 //
