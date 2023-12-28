@@ -54,6 +54,7 @@ unlocal:
 		popd > /dev/null; \
 	done
 
+be-update: export GOPROXY=direct
 be-update:
 	@for dir in `find . -name "go.mod" -exec dirname \{\} \;`; do \
 		pushd "$${dir}" > /dev/null; \
@@ -64,6 +65,14 @@ be-update:
 		if egrep -q 'go-curses/ctk v' go.mod; then \
 			echo "# $${dir}: go get ctk"; \
 			go get github.com/go-curses/ctk@latest; \
+		fi; \
+		FOUND_LIBS=`grep -h -v '^module' go.mod | grep 'go-curses/corelibs/' | perl -pe 's!^.*(github\.com/go-curses/corelibs/\S+).*$$!$${1}!'`; \
+		if [ -n "$${FOUND_LIBS}" ]; then \
+			for found_lib in $${FOUND_LIBS}; do \
+				name=`basename $${found_lib}`; \
+				echo "# $${dir}: go get corelibs/$${name}"; \
+				go get $${found_lib}@latest; \
+			done; \
 		fi; \
 		popd > /dev/null; \
 	done
