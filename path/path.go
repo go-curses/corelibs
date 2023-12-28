@@ -85,7 +85,7 @@ func BackupAndOverwrite(path, backup, content string) (err error) {
 	}
 
 	for Exists(backup) {
-		backup = strings.IncrementFilePath(backup)
+		backup = strings.IncrementFileBackup(backup)
 	}
 
 	if _, err = CopyFile(path, backup); err != nil {
