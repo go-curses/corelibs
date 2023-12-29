@@ -99,7 +99,7 @@ var (
 
 // IncrementFileName will return the given label with a specific number suffix incremented. If the label does not end
 // with the pattern `\(\d+\)\s*$`, one is appended with a space, if the pattern matches no spaces are added and the
-// digit is modified and any trailing space removed
+// digit is modified with any trailing space removed
 func IncrementFileName(name string) (modified string) {
 	if RxNameSuffix.MatchString(name) {
 		m := RxNameSuffix.FindAllStringSubmatch(name, 1)
@@ -111,7 +111,7 @@ func IncrementFileName(name string) (modified string) {
 	return
 }
 
-// IncrementFilePath is the same as IncrementFileName except using a `\.\d+` suffix pattern instead of ` \(\d+\)`
+// IncrementFilePath will return the given name with a period and an incremented number appended
 func IncrementFilePath(name string) (modified string) {
 	if RxPathSuffix.MatchString(name) {
 		m := RxPathSuffix.FindAllStringSubmatch(name, 1)
@@ -128,16 +128,16 @@ func IncrementFilePath(name string) (modified string) {
 //
 // Examples:
 //
-//	IncrementFileBackup("test.txt") == "test.txt.bak"
-//	IncrementFileBackup("test.txt.bak") == "test.txt.1.bak"
-//	IncrementFileBackup("test.txt.1.bak") == "test.txt.2.bak"
-func IncrementFileBackup(name string) (modified string) {
+//	IncrementFileBackup("test.txt", ".bak") == "test.txt.bak"
+//	IncrementFileBackup("test.txt.bak", ".bak") == "test.txt.1.bak"
+//	IncrementFileBackup("test.txt.1.bak", ".bak") == "test.txt.2.bak"
+func IncrementFileBackup(name, extension string) (modified string) {
 	var trimmed string
-	if strings.HasSuffix(name, ".bak") {
-		trimmed = name[:len(name)-4]
+	if strings.HasSuffix(name, extension) {
+		trimmed = name[:len(name)-len(extension)]
 	} else {
 		trimmed = name
 	}
-	modified = IncrementFilePath(trimmed) + ".bak"
+	modified = IncrementFilePath(trimmed) + extension
 	return
 }
