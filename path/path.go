@@ -78,19 +78,19 @@ func OverwriteWithPerms(path, content string, perm fs.FileMode) (err error) {
 	return
 }
 
-func BackupAndOverwrite(path, backup, content string) (err error) {
+func BackupAndOverwrite(path, extension, content string) (err error) {
+	backup := path + extension
+	for Exists(backup) {
+		backup = strings.IncrementFileBackup(path, extension)
+	}
+
 	var perms os.FileMode
 	if perms, err = Permissions(path); err != nil {
 		return
-	}
-
-	for Exists(backup) {
-		backup = strings.IncrementFileBackup(backup)
-	}
-
-	if _, err = CopyFile(path, backup); err != nil {
+	} else if _, err = CopyFile(path, backup); err != nil {
 		return
 	}
+
 	err = OverwriteWithPerms(path, content, perms)
 	return
 }
