@@ -84,3 +84,11 @@ tidy:
 		go mod tidy; \
 		popd > /dev/null; \
 	done
+
+build:
+	@for dir in `find . -name "go.mod" -exec dirname \{\} \;`; do \
+		pushd "$${dir}" > /dev/null; \
+		echo "# $${dir}: go build -v ./..."; \
+		go build -v ./...; \
+		popd > /dev/null; \
+	done
