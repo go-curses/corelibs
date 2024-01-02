@@ -18,8 +18,11 @@ import (
 	"sort"
 
 	"github.com/maruel/natural"
+
+	"github.com/go-corelibs/maths"
 )
 
+// SortedKeys returns a slice of natural-sorted keys from the given map
 func SortedKeys[K ~string, V interface{}](data map[K]V) (keys []K) {
 	for key, _ := range data {
 		keys = append(keys, key)
@@ -27,6 +30,26 @@ func SortedKeys[K ~string, V interface{}](data map[K]V) (keys []K) {
 	sort.Slice(keys, func(i, j int) (less bool) {
 		less = natural.Less(string(keys[i]), string(keys[j]))
 		return
+	})
+	return
+}
+
+func SortedNumbers[K maths.Number, V interface{}](data map[K]V) (keys []K) {
+	for key, _ := range data {
+		keys = append(keys, key)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i] < keys[j]
+	})
+	return
+}
+
+func ReverseSortedNumbers[K maths.Number, V interface{}](data map[K]V) (keys []K) {
+	for key, _ := range data {
+		keys = append(keys, key)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i] > keys[j]
 	})
 	return
 }
