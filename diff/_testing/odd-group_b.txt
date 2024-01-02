@@ -1,3 +1,0 @@
-This is the even group of changes.
-with at least one deletion and one addition,
-with another deletion immediately following.
