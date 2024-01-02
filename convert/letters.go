@@ -17,7 +17,7 @@ package convert
 import (
 	"strings"
 
-	"github.com/go-curses/corelibs/maths"
+	"github.com/go-corelibs/maths"
 )
 
 func ToLetters[T maths.Integers](number T) (letters string) {
