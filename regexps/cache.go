@@ -19,53 +19,67 @@ import (
 	"sync"
 )
 
-var _cache *cache
+var _cache = newCache()
 
-func init() {
-	_cache = &cache{
-		data: make(map[string]*cacheEntry),
-	}
-}
-
-type cache struct {
-	data map[string]*cacheEntry
-
-	sync.RWMutex
-}
-
-type cacheEntry struct {
+type entry struct {
 	Regexp *regexp.Regexp
 	Source string
 	Error  error
 }
 
-func (c *cache) get(expr string) (rx *regexp.Regexp, err error, ok bool) {
-	c.RLock()
-	defer c.RUnlock()
-	var entry *cacheEntry
-	if entry, ok = c.data[expr]; ok {
-		rx = entry.Regexp
-		err = entry.Error
+type cache struct {
+	data map[string]*entry
+
+	sync.RWMutex
+}
+
+func newCache() (c *cache) {
+	c = &cache{
+		data: make(map[string]*entry),
 	}
 	return
 }
 
-func (c *cache) set(expr string, rx *regexp.Regexp, err error) {
+func (c *cache) get(pattern string) (rx *regexp.Regexp, err error, ok bool) {
+	c.RLock()
+	defer c.RUnlock()
+	var e *entry
+	if e, ok = c.data[pattern]; ok {
+		rx = e.Regexp
+		err = e.Error
+	}
+	return
+}
+
+func (c *cache) set(pattern string, rx *regexp.Regexp, err error) {
 	c.Lock()
 	defer c.Unlock()
-	c.data[expr] = &cacheEntry{
+	c.data[pattern] = &entry{
 		Regexp: rx,
-		Source: expr,
+		Source: pattern,
 		Error:  err,
 	}
 }
 
-func Compile(expr string) (rx *regexp.Regexp, err error) {
+func (c *cache) clear() {
+	c.Lock()
+	defer c.Unlock()
+	c.data = make(map[string]*entry)
+}
+
+// Compile will call regexp.Compile and cache the results and any subsequent
+// calls to Compile with the same patterns return the cached results
+func Compile(pattern string) (rx *regexp.Regexp, err error) {
 	var ok bool
-	if rx, err, ok = _cache.get(expr); ok {
+	if rx, err, ok = _cache.get(pattern); ok {
 		return
 	}
-	rx, err = regexp.Compile(expr)
-	_cache.set(expr, rx, err)
+	rx, err = regexp.Compile(pattern)
+	_cache.set(pattern, rx, err)
 	return
+}
+
+// ClearCache will purge all cached patterns
+func ClearCache() {
+	_cache.clear()
 }
