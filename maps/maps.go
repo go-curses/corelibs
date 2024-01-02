@@ -24,7 +24,7 @@ import (
 
 // SortedKeys returns a slice of natural-sorted keys from the given map
 func SortedKeys[K ~string, V interface{}](data map[K]V) (keys []K) {
-	for key, _ := range data {
+	for key := range data {
 		keys = append(keys, key)
 	}
 	sort.Slice(keys, func(i, j int) (less bool) {
@@ -35,7 +35,7 @@ func SortedKeys[K ~string, V interface{}](data map[K]V) (keys []K) {
 }
 
 func SortedNumbers[K maths.Number, V interface{}](data map[K]V) (keys []K) {
-	for key, _ := range data {
+	for key := range data {
 		keys = append(keys, key)
 	}
 	sort.Slice(keys, func(i, j int) bool {
@@ -45,7 +45,7 @@ func SortedNumbers[K maths.Number, V interface{}](data map[K]V) (keys []K) {
 }
 
 func ReverseSortedNumbers[K maths.Number, V interface{}](data map[K]V) (keys []K) {
-	for key, _ := range data {
+	for key := range data {
 		keys = append(keys, key)
 	}
 	sort.Slice(keys, func(i, j int) bool {
