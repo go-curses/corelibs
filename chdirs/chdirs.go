@@ -26,6 +26,8 @@ var (
 	}{}
 )
 
+// Push notes the current working directory and changes directory to the given
+// path, use Pop to return to the previous working directory
 func Push(path string) (err error) {
 	gPushPop.Lock()
 	defer gPushPop.Unlock()
@@ -39,6 +41,8 @@ func Push(path string) (err error) {
 	return
 }
 
+// Pop removes the last working directory from the stack and changes directory
+// to it
 func Pop() (err error) {
 	gPushPop.Lock()
 	defer gPushPop.Unlock()
@@ -54,6 +58,7 @@ func Pop() (err error) {
 	return
 }
 
+// Stack returns the current Push stack
 func Stack() (stack []string) {
 	gPushPop.RLock()
 	defer gPushPop.RUnlock()
