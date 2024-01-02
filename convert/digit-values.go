@@ -25,10 +25,11 @@ type DigitValue struct {
 
 type DigitValues []DigitValue
 
+// Sort returns a reverse sorted copy of the DigitValues
 func (r DigitValues) Sort() (sorted DigitValues) {
 	sorted = append(sorted, r...)
 	sort.Slice(sorted, func(i, j int) (less bool) {
-		less = sorted[i].Value < sorted[j].Value
+		less = sorted[i].Value > sorted[j].Value
 		return
 	})
 	return
