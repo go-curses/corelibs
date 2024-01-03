@@ -45,7 +45,7 @@ type cSpinner struct {
 	sync.RWMutex
 }
 
-func NewSpinner(symbols []string, fn Callback) (s Spinner) {
+func New(symbols []string, fn Callback) (s Spinner) {
 	if len(symbols) == 0 {
 		symbols = DefaultSymbols[:]
 	}
