@@ -29,7 +29,7 @@ var (
 	// DefaultOpenFlag is the os.OpenFile flag used by NewFileWriter
 	DefaultOpenFlag = os.O_CREATE | os.O_WRONLY | os.O_APPEND
 	// DefaultTempFile is the os.CreateTemp pattern used by NewFileWriter
-	DefaultTempFile = "fw-*.tmp"
+	DefaultTempFile = "filewriter-*.tmp"
 )
 
 var _ Writer = (*CWriter)(nil)
