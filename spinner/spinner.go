@@ -32,6 +32,7 @@ type Spinner interface {
 	String() (symbol string)
 	Increment()
 	Start()
+	StartWith(interval time.Duration)
 	Stop()
 }
 
@@ -71,8 +72,12 @@ func (s *cSpinner) Increment() {
 }
 
 func (s *cSpinner) Start() {
+	s.StartWith(time.Millisecond * 250)
+}
+
+func (s *cSpinner) StartWith(interval time.Duration) {
 	s.Lock()
-	s.ticker = time.NewTicker(time.Millisecond * 250)
+	s.ticker = time.NewTicker(interval)
 	s.Unlock()
 	for range s.ticker.C {
 		s.callback(s.String())
