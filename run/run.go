@@ -17,6 +17,7 @@ package run
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"strings"
@@ -49,21 +50,35 @@ func With(options Options) (stdout, stderr string, status int, err error) {
 	if err != nil {
 		var exitError *exec.ExitError
 		if errors.As(err, &exitError) {
-			if status = exitError.ExitCode(); status != 0 {
-				if text := strings.TrimSpace(stderr); text != "" {
+			status = exitError.ExitCode() // always non-zero
+
+			// helper func to find the last, non-empty, line of the given text
+			lastLine := func(text string) (errMsg string) {
+				if text = strings.TrimSpace(text); text != "" {
 					lines := strings.Split(text, "\n")
-					if count := len(lines); count > 0 {
-						err = errors.New(lines[count-1])
-					} else if text = strings.TrimSpace(stdout); text != "" {
-						lines = strings.Split(text, "\n")
-						count = len(lines)
-						err = errors.New(lines[count-1])
-					} else {
-						err = errors.New("(unspecified)")
+					for idx := len(lines) - 1; idx >= 0; idx-- {
+						if msg := strings.TrimSpace(lines[idx]); msg != "" {
+							errMsg = msg
+							return
+						}
 					}
 				}
 				return
 			}
+
+			// check stderr and then stdout for a last line to use as the
+			// error message
+			if errMsg := lastLine(stderr); errMsg != "" {
+				err = errors.New(errMsg)
+				return
+			} else if errMsg = lastLine(stdout); errMsg != "" {
+				err = errors.New(errMsg)
+				return
+			}
+
+			// both stderr and stdout had no messaging, use a sane fallback
+			// message instead
+			err = fmt.Errorf("exit status %d", status)
 		}
 	}
 	return
