@@ -12,6 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package spinner implements a means of rendering unicode characters that
+// give a sense that something is happening and that the user is waiting
+// during that process.
+//
+// The Spinner constructed does not actually write or otherwise output
+// anything in particular. Instead, it simply provides the current
+// unicode character for that moment or iteration depending on whether
+// Spinner.Start was called or if the Spinner.Increment method is used
+// to step to the next logical character in the loop.
 package spinner
 
 import (
@@ -26,13 +35,25 @@ var (
 	DefaultSymbols         = DefaultSpinnerRunes.Strings()
 )
 
+// Callback is the function signature for the `fn` argument to New
 type Callback func(symbol string)
 
+// Spinner is the interface for interacting with the New Spinner
+// instance, all methods are concurrency safe
 type Spinner interface {
+	// String returns the current symbol
 	String() (symbol string)
+	// Increment moves the spinner to the symbol
 	Increment()
+	// Start simply calls StartWith an interval of 250ms
 	Start()
+	// StartWith (and Start) are blocking operations, use a goroutine
+	// to start a spinner in the background. If using within a Go-Curses
+	// environment, use cdk.Go to invoke the goroutine. Once started,
+	// a time.Ticker is used to call the New `fn` (if not nil) and
+	// increment the spinner state once every interval
 	StartWith(interval time.Duration)
+	// Stop stops any started incrementing
 	Stop()
 }
 
@@ -45,6 +66,7 @@ type cSpinner struct {
 	sync.RWMutex
 }
 
+// New constructs a new Spinner instance
 func New(symbols []string, fn Callback) (s Spinner) {
 	if len(symbols) == 0 {
 		symbols = DefaultSymbols[:]
