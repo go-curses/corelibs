@@ -16,6 +16,7 @@ package filewriter
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -202,8 +203,10 @@ func (w *CWriter) WalkFile(fn func(line string) (stop bool)) (stopped bool) {
 	var fh *os.File
 	var err error
 	if fh, err = os.Open(w.file); err != nil {
-		// logically, this should not happen
-		panic(err)
+		if errors.Is(err, os.ErrNotExist) {
+			return
+		}
+		panic(err) // should never happen
 	}
 	defer fh.Close()
 	s := bufio.NewScanner(fh)
