@@ -22,8 +22,19 @@ import (
 	"github.com/go-curses/cdk"
 )
 
-// Callback runs the command defined by the Options and pipes the standard and error output streams to the stdout and
-// stderr functions given (line by line)
+// Callback runs the command defined by the Options and pipes the standard and
+// error output streams, line by line, to their respective stdout and stderr
+// functions.
+//
+// Callback returns the `pid`, a `done` channel and any err that happened during
+// the starting of the command. The `done` channel will receive a `true` upon
+// the successful exiting of the command and will receive a `false` if the
+// command exited with an error (after the `stderr` func is called with the
+// `err.Error()` message).
+//
+// Callback uses cdk.Go to run goroutines and as such is safe for use within a
+// Go-Curses environment that needs to be able to update the UI thread with
+// display updates
 func Callback(options Options, stdout, stderr func(line string)) (pid int, done chan bool, err error) {
 	cmd := exec.Command(options.Name, options.Argv...)
 	cmd.Dir = options.Path

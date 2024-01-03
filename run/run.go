@@ -23,6 +23,8 @@ import (
 	"strings"
 )
 
+// Run is a wrapper around With configured with the given Options and the
+// default os.Environ
 func Run(path, name string, argv ...string) (stdout, stderr string, status int, err error) {
 	return With(Options{
 		Path:    path,
@@ -32,6 +34,11 @@ func Run(path, name string, argv ...string) (stdout, stderr string, status int, 
 	})
 }
 
+// With is a blocking function which runs a command with the Options given and
+// if there is an error, looks for the last non-empty line of output to STDERR
+// (and if that's empty, checks STDOUT) and returns that as the function `err`
+// return value. If both STDERR and STDOUT are empty, the error message is:
+// "exit status %d" where the `%d` is replaced with the status code.
 func With(options Options) (stdout, stderr string, status int, err error) {
 	cmd := exec.Command(options.Name, options.Argv...)
 	cmd.Stdin = nil
