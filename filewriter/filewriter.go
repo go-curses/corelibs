@@ -35,10 +35,10 @@ var (
 
 var _ Writer = (*CWriter)(nil)
 
-// Writer is an io.WriteCloser that does not keep file handles open any
+// FileWriter is an io.WriteCloser that does not keep file handles open any
 // longer than necessary and provides additional methods for interacting
 // with the underlying file. All operations are safe for concurrent calls
-type Writer interface {
+type FileWriter interface {
 	io.Writer
 	io.Closer
 
