@@ -82,9 +82,6 @@ func (s *cSpinner) StartWith(interval time.Duration) {
 	for range s.ticker.C {
 		s.callback(s.String())
 		s.Increment()
-		if s.ticker == nil {
-			break
-		}
 	}
 }
 
