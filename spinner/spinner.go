@@ -35,7 +35,7 @@ type Spinner interface {
 	Stop()
 }
 
-type CSpinner struct {
+type cSpinner struct {
 	index    int
 	symbols  []string
 	ticker   *time.Ticker
@@ -48,21 +48,21 @@ func NewSpinner(symbols []string, fn Callback) (s Spinner) {
 	if len(symbols) == 0 {
 		symbols = DefaultSymbols[:]
 	}
-	s = &CSpinner{
+	s = &cSpinner{
 		symbols:  symbols,
 		callback: fn,
 	}
 	return
 }
 
-func (s *CSpinner) String() (symbol string) {
+func (s *cSpinner) String() (symbol string) {
 	s.RLock()
 	defer s.RUnlock()
 	symbol = s.symbols[s.index]
 	return
 }
 
-func (s *CSpinner) Increment() {
+func (s *cSpinner) Increment() {
 	s.Lock()
 	defer s.Unlock()
 	if s.index += 1; s.index >= len(s.symbols) {
@@ -70,7 +70,7 @@ func (s *CSpinner) Increment() {
 	}
 }
 
-func (s *CSpinner) Start() {
+func (s *cSpinner) Start() {
 	s.Lock()
 	s.ticker = time.NewTicker(time.Millisecond * 250)
 	s.Unlock()
@@ -83,7 +83,7 @@ func (s *CSpinner) Start() {
 	}
 }
 
-func (s *CSpinner) Stop() {
+func (s *cSpinner) Stop() {
 	s.RLock()
 	if s.ticker != nil {
 		s.RUnlock()
