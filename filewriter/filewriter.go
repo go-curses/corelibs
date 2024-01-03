@@ -21,6 +21,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 )
 
@@ -44,7 +45,9 @@ var (
 type Builder interface {
 	// SetFile specifies the file path to use
 	SetFile(file string) Builder
-	// UseTemp specifies the pattern to use with os.CreateTemp
+	// UseTemp specifies the pattern to use with os.CreateTemp. If the pattern
+	// includes a unix directory separator, the `pattern` argument is the base
+	// name and the rest is used as the `dir` argument
 	UseTemp(pattern string) Builder
 	// SetMode specifies the file permissions to use when creating files
 	SetMode(mode os.FileMode) Builder
@@ -86,6 +89,7 @@ type FileWriter interface {
 type cWriter struct {
 	file string
 	temp string
+	tDir string
 	flag int
 	mode os.FileMode
 
@@ -109,6 +113,17 @@ func (w *cWriter) SetFile(file string) Builder {
 }
 
 func (w *cWriter) UseTemp(pattern string) Builder {
+	if len(pattern) > 0 {
+		if strings.Contains(pattern, "/") {
+			path := pattern
+			pattern = filepath.Base(path)
+			path = strings.TrimSuffix(path, pattern)
+			if last := len(path) - 1; path[last] == '/' {
+				path = path[:last]
+			}
+			w.tDir = path
+		}
+	}
 	w.temp = pattern
 	return w
 }
@@ -126,7 +141,7 @@ func (w *cWriter) Make() (writer FileWriter, err error) {
 	if w.temp != "" {
 
 		var fh *os.File
-		if fh, err = os.CreateTemp("", w.temp); err != nil {
+		if fh, err = os.CreateTemp(w.tDir, w.temp); err != nil {
 			err = fmt.Errorf("error creating temp file: %w", err)
 			return
 		}
