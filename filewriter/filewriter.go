@@ -36,14 +36,21 @@ var _ Writer = (*CWriter)(nil)
 
 // Writer is an io.WriteCloser that does not keep file handles open any
 // longer than necessary and provides additional methods for interacting
-// with the underlying file.
+// with the underlying file. All operations are safe for concurrent calls
 type Writer interface {
 	io.Writer
 	io.Closer
 
+	// File returns the underlying file name
 	File() (file string)
+	// Remove deletes the underlying file
 	Remove() (err error)
+
+	// ReadFile returns the entire file contents
 	ReadFile() (data []byte, err error)
+	// WalkFile opens the output file and scans one line at a time, calling the
+	// given `fn` for each. If the `fn` returns true, the walk stops. WalkFile
+	// returns true if the walk was stopped.
 	WalkFile(fn func(line string) (stop bool)) (stopped bool)
 
 	sync.Locker
@@ -137,8 +144,8 @@ func (w *CWriter) SetMode(mode os.FileMode) *CWriter {
 	return w
 }
 
-// Write opens the log file, writes the data given and returns the bytes written
-// and the error state after closing the open file handle.
+// Write opens the log file, writes the data given and returns the bytes
+// written and the error state after closing the open file handle.
 func (w *CWriter) Write(p []byte) (n int, err error) {
 	w.Lock()
 	defer w.Unlock()
@@ -153,7 +160,7 @@ func (w *CWriter) Write(p []byte) (n int, err error) {
 	return
 }
 
-// WriteString is a convenience wrapper around Write()
+// WriteString is a convenience wrapper around Write
 func (w *CWriter) WriteString(s string) (n int, err error) {
 	n, err = w.Write([]byte(s))
 	return
