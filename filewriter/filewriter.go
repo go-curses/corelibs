@@ -33,19 +33,46 @@ var (
 	DefaultTempFile = "filewriter-*.tmp"
 )
 
-var _ Writer = (*CWriter)(nil)
+var (
+	_ FileWriter = (*cWriter)(nil)
+	_ io.Writer  = (*cWriter)(nil)
+	_ io.Closer  = (*cWriter)(nil)
+)
+
+// Builder is the buildable interface for constructing new FileWriter
+// instances
+type Builder interface {
+	// SetFile specifies the file path to use
+	SetFile(file string) Builder
+	// UseTemp specifies the pattern to use with os.CreateTemp
+	UseTemp(pattern string) Builder
+	// SetMode specifies the file permissions to use when creating files
+	SetMode(mode os.FileMode) Builder
+	// Make initializes the settings configured with other Builder methods and
+	// returns the FileWriter instance
+	Make() (writer FileWriter, err error)
+}
 
 // FileWriter is an io.WriteCloser that does not keep file handles open any
 // longer than necessary and provides additional methods for interacting
 // with the underlying file. All operations are safe for concurrent calls
 type FileWriter interface {
-	io.Writer
-	io.Closer
-
 	// File returns the underlying file name
 	File() (file string)
+	// Mode returns the file permissions used when creating files
+	Mode() (mode os.FileMode)
 	// Remove deletes the underlying file
 	Remove() (err error)
+
+	// Write opens the log file, writes the data given and returns the number
+	// of bytes written and the error state after closing the open file handle
+	Write(p []byte) (n int, err error)
+	// WriteString is a convenience wrapper around Write
+	WriteString(s string) (n int, err error)
+	// Close flags this FileWriter as being closed, blocking any further Write
+	// or WriteString operations; ReadFile and WalkFile can still be used
+	// until Remove is called
+	Close() (err error)
 
 	// ReadFile returns the entire file contents
 	ReadFile() (data []byte, err error)
@@ -54,151 +81,135 @@ type FileWriter interface {
 	// returns true if the walk was stopped. WalkFile will panic on any os.Open
 	// error that is not os.ErrNotExist
 	WalkFile(fn func(line string) (stop bool)) (stopped bool)
-
-	sync.Locker
 }
 
-// CWriter implements the Writer interface.
-type CWriter struct {
+type cWriter struct {
 	file string
+	temp string
 	flag int
 	mode os.FileMode
+
+	closed bool
 
 	sync.RWMutex
 }
 
-// NewFileWriter constructs a new CWriter instance, using the given file path
-// and with the default settings. If the file does not exist and the os.O_CREATE
-// flag is present, the file will be created on the first write operation. If
-// the file argument is empty, a temp file is created instead using
-// DefaultTempFile as the os.CreateTemp pattern value.
-//
-// `file` is the local filesystem output destination
-func NewFileWriter(file string) (w Writer, err error) {
-	if file != "" {
-		if file, err = filepath.Abs(file); err != nil {
-			err = fmt.Errorf("error resolving absolute path to %q: %w", file, err)
-			return
-		}
-	} else {
-		var fh *os.File
-		if fh, err = os.CreateTemp("", DefaultTempFile); err != nil {
-			err = fmt.Errorf("error creating temp file: %w", err)
-			return
-		}
-		file = fh.Name()
-		if err = fh.Close(); err != nil {
-			err = fmt.Errorf("error closing temp file: %w", err)
-			return
-		}
-	}
-	w = &CWriter{
-		file: file,
+// New constructs a new Builder instance with the DefaultOpenFlag and
+// DefaultFileMode
+func New() Builder {
+	return &cWriter{
 		flag: DefaultOpenFlag,
 		mode: DefaultFileMode,
 	}
-	return
 }
 
-// NewTempFileWriter is the same as NewFileWriter with the exception that the
-// file is a temporary file created with os.CreateTemp and the argument is the
-// pattern to use when creating it.
-//
-// `pattern` is the os.CreateTemp pattern argument to use
-func NewTempFileWriter(pattern string) (w Writer, err error) {
-	var fh *os.File
-	if fh, err = os.CreateTemp("", pattern); err != nil {
-		err = fmt.Errorf("error creating temp file: %w", err)
-		return
-	}
-	pattern = fh.Name()
-	if err = fh.Close(); err != nil {
-		err = fmt.Errorf("error closing temp file: %w", err)
-		return
-	}
-	w = &CWriter{
-		file: pattern,
-		flag: DefaultOpenFlag,
-		mode: DefaultFileMode,
-	}
-	return
-}
-
-// SetFlag is a chainable method for setting the file flags used to open a new
-// file handle each time Write is called
-//
-// `flag` is the os.OpenFile flags setting
-func (w *CWriter) SetFlag(flag int) *CWriter {
-	w.Lock()
-	defer w.Unlock()
-	w.flag = flag
+func (w *cWriter) SetFile(file string) Builder {
+	w.file = file
 	return w
 }
 
-// SetMode is a chainable method for setting the file mode used to open a new
-// file handle each time Write is called
-//
-// `mode` is the file mode setting
-func (w *CWriter) SetMode(mode os.FileMode) *CWriter {
-	w.Lock()
-	defer w.Unlock()
+func (w *cWriter) UseTemp(pattern string) Builder {
+	w.temp = pattern
+	return w
+}
+
+func (w *cWriter) SetMode(mode os.FileMode) Builder {
 	w.mode = mode
 	return w
 }
 
-// Write opens the log file, writes the data given and returns the bytes
-// written and the error state after closing the open file handle.
-func (w *CWriter) Write(p []byte) (n int, err error) {
-	w.Lock()
-	defer w.Unlock()
-	var fh *os.File
-	if fh, err = os.OpenFile(w.file, w.flag, w.mode); err != nil {
-		return
+func (w *cWriter) Make() (writer FileWriter, err error) {
+	if w.temp == "" && w.file == "" {
+		w.temp = DefaultTempFile
 	}
-	defer func() {
+
+	if w.temp != "" {
+
+		var fh *os.File
+		if fh, err = os.CreateTemp("", w.temp); err != nil {
+			err = fmt.Errorf("error creating temp file: %w", err)
+			return
+		}
+		w.file = fh.Name()
 		_ = fh.Close()
-	}()
-	n, err = fh.Write(p)
+		if err = os.Chmod(w.file, w.mode); err != nil {
+			err = fmt.Errorf("error chmod temp file %q: %w", w.file, err)
+			return
+		}
+
+	} else {
+
+		file := w.file // just for the error because it gets clobbered
+		if w.file, err = filepath.Abs(w.file); err != nil {
+			err = fmt.Errorf("error resolving absolute path to %q: %w", file, err)
+			return
+		}
+
+	}
+
+	writer = w
 	return
 }
 
-// WriteString is a convenience wrapper around Write
-func (w *CWriter) WriteString(s string) (n int, err error) {
-	n, err = w.Write([]byte(s))
-	return
-}
-
-// Close is a non-operation, added to fulfill the io.WriteCloser interface
-func (w *CWriter) Close() (err error) {
-	return
-}
-
-// File returns the file given to NewFileWriter
-func (w *CWriter) File() (file string) {
+func (w *cWriter) File() (file string) {
+	w.RLock()
+	defer w.RUnlock()
 	file = w.file
 	return
 }
 
-// Remove deletes the file
-func (w *CWriter) Remove() (err error) {
-	w.Lock()
-	defer w.Unlock()
-	err = os.Remove(w.file)
+func (w *cWriter) Mode() (mode os.FileMode) {
+	w.RLock()
+	defer w.RUnlock()
+	mode = w.mode
 	return
 }
 
-// ReadFile reads and returns the entire file
-func (w *CWriter) ReadFile() (data []byte, err error) {
+func (w *cWriter) Remove() (err error) {
+	w.Lock()
+	defer w.Unlock()
+	if err = os.Remove(w.file); errors.Is(err, os.ErrNotExist) {
+		err = nil
+	}
+	return
+}
+
+func (w *cWriter) Close() (err error) {
+	w.Lock()
+	defer w.Unlock()
+	w.closed = true
+	return
+}
+
+func (w *cWriter) Write(p []byte) (n int, err error) {
+	w.Lock()
+	defer w.Unlock()
+	if w.closed {
+		err = os.ErrClosed
+		return
+	}
+	var fh *os.File
+	if fh, err = os.OpenFile(w.file, w.flag, w.mode); err != nil {
+		return
+	}
+	n, err = fh.Write(p)
+	_ = fh.Close()
+	return
+}
+
+func (w *cWriter) WriteString(s string) (n int, err error) {
+	n, err = w.Write([]byte(s))
+	return
+}
+
+func (w *cWriter) ReadFile() (data []byte, err error) {
 	w.RLock()
 	defer w.RUnlock()
 	data, err = os.ReadFile(w.file)
 	return
 }
 
-// WalkFile opens the output file and scans one line at a time, calling the
-// given `fn` for each. If the `fn` returns true, the walk stops. WalkFile
-// returns true if the walk was stopped.
-func (w *CWriter) WalkFile(fn func(line string) (stop bool)) (stopped bool) {
+func (w *cWriter) WalkFile(fn func(line string) (stop bool)) (stopped bool) {
 	w.RLock()
 	w.RUnlock()
 	var fh *os.File
