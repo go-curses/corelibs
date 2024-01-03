@@ -51,7 +51,8 @@ type Writer interface {
 	ReadFile() (data []byte, err error)
 	// WalkFile opens the output file and scans one line at a time, calling the
 	// given `fn` for each. If the `fn` returns true, the walk stops. WalkFile
-	// returns true if the walk was stopped.
+	// returns true if the walk was stopped. WalkFile will panic on any os.Open
+	// error that is not os.ErrNotExist
 	WalkFile(fn func(line string) (stop bool)) (stopped bool)
 
 	sync.Locker
