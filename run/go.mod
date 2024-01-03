@@ -2,7 +2,10 @@ module github.com/go-curses/corelibs/run
 
 go 1.21.0
 
-require github.com/go-curses/cdk v0.5.19
+require (
+	github.com/go-curses/cdk v0.5.19
+	github.com/smartystreets/goconvey v1.8.1
+)
 
 require (
 	github.com/GehirnInc/crypt v0.0.0-20200316065508-bb7000b8a962 // indirect
@@ -18,6 +21,7 @@ require (
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/jackdoe/go-gpmctl v0.0.0-20231210204613-737e8a242925 // indirect
+	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/jtolio/gls v4.20.0+incompatible // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
@@ -29,6 +33,7 @@ require (
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
+	github.com/smarty/assertions v1.15.0 // indirect
 	github.com/tg123/go-htpasswd v1.2.2 // indirect
 	github.com/urfave/cli/v2 v2.26.0 // indirect
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2 // indirect
