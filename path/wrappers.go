@@ -17,6 +17,7 @@ package path
 import (
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/djherbis/times"
@@ -25,6 +26,12 @@ import (
 // Abs is a convenience wrapper around filepath.Abs
 func Abs(path string) (absolute string, err error) {
 	absolute, err = filepath.Abs(path)
+	return
+}
+
+// Clean is a convenience wrapper around filepath.Clean
+func Clean(path string) (cleaned string) {
+	cleaned = filepath.Clean(path)
 	return
 }
 
@@ -52,8 +59,14 @@ func ReadFile(path string) (content []byte, err error) {
 	return
 }
 
-// Stat is a convenience wrapper around github-com-djherbis-times.Stat
+// Stat is a convenience wrapper around github.com/djherbis/times.Stat
 func Stat(path string) (spec times.Timespec, err error) {
 	spec, err = times.Stat(path)
+	return
+}
+
+// Which is a convenience wrapper around exec.LookPath
+func Which(name string) (path string) {
+	path, _ = exec.LookPath(name)
 	return
 }
