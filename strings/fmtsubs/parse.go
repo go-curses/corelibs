@@ -21,7 +21,7 @@ import (
 
 	"github.com/iancoleman/strcase"
 
-	"github.com/go-curses/corelibs/convert"
+	"github.com/go-corelibs/convert"
 )
 
 type subst struct {
