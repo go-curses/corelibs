@@ -21,8 +21,8 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/maruel/natural"
 
-	"github.com/go-curses/corelibs/regexps"
-	"github.com/go-curses/corelibs/slices"
+	"github.com/go-corelibs/regexps"
+	"github.com/go-corelibs/slices"
 )
 
 var nameSuffixes = []string{
