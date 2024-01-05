@@ -15,10 +15,7 @@
 package strings
 
 import (
-	"fmt"
-	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/iancoleman/strcase"
@@ -89,55 +86,5 @@ func NameFromEmail(email string) (name string) {
 			name += strcase.ToCamel(after)
 		}
 	}
-	return
-}
-
-var (
-	RxNameSuffix = regexp.MustCompile(`\((\d+)\)\s*$`)
-	RxPathSuffix = regexp.MustCompile(`.(\d+)\s*$`)
-)
-
-// IncrementFileName will return the given label with a specific number suffix incremented. If the label does not end
-// with the pattern `\(\d+\)\s*$`, one is appended with a space, if the pattern matches no spaces are added and the
-// digit is modified with any trailing space removed
-func IncrementFileName(name string) (modified string) {
-	if RxNameSuffix.MatchString(name) {
-		m := RxNameSuffix.FindAllStringSubmatch(name, 1)
-		d, _ := strconv.Atoi(m[0][1])
-		modified = RxNameSuffix.ReplaceAllString(name, fmt.Sprintf("(%d)", d+1))
-	} else {
-		modified = name + " (1)"
-	}
-	return
-}
-
-// IncrementFilePath will return the given name with a period and an incremented number appended
-func IncrementFilePath(name string) (modified string) {
-	if RxPathSuffix.MatchString(name) {
-		m := RxPathSuffix.FindAllStringSubmatch(name, 1)
-		d, _ := strconv.Atoi(m[0][1])
-		modified = RxPathSuffix.ReplaceAllString(name, fmt.Sprintf(".%d", d+1))
-	} else {
-		modified = name + ".1"
-	}
-	return
-}
-
-// IncrementFileBackup removes any ".bak" extension present, uses IncrementFilePath to do the incrementing and adding
-// a ".bak" extension regardless of the presence of any ".bak" extension before incrementing.
-//
-// Examples:
-//
-//	IncrementFileBackup("test.txt", ".bak") == "test.txt.bak"
-//	IncrementFileBackup("test.txt.bak", ".bak") == "test.txt.1.bak"
-//	IncrementFileBackup("test.txt.1.bak", ".bak") == "test.txt.2.bak"
-func IncrementFileBackup(name, extension string) (modified string) {
-	var trimmed string
-	if strings.HasSuffix(name, extension) {
-		trimmed = name[:len(name)-len(extension)]
-	} else {
-		trimmed = name
-	}
-	modified = IncrementFilePath(trimmed) + extension
 	return
 }
