@@ -42,35 +42,6 @@ func LowerStrings(in ...string) (out []string) {
 	return
 }
 
-func StringIndexInSlice(src string, dst []string) int {
-	for i, v := range dst {
-		if src == v {
-			return i
-		}
-	}
-	return -1
-}
-
-func StringIndexInStrings(src string, dst ...string) int {
-	for i, v := range dst {
-		if src == v {
-			return i
-		}
-	}
-	return -1
-}
-
-func AnyStringsInStrings(src, tgt []string) (found bool) {
-	for _, s := range src {
-		for _, t := range tgt {
-			if found = s == t; found {
-				return
-			}
-		}
-	}
-	return
-}
-
 func TitleCase(input string) (output string) {
 	first := true
 	output = regexps.RxWord.ReplaceAllStringFunc(
